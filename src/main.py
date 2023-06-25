@@ -1,6 +1,3 @@
-import logging
-import click
-import openai
 import os
 from langchain.embeddings.openai import OpenAIEmbeddings
 from agents.agent import ConversationalAgent, Verifier, IssueCreator, Coder
@@ -10,6 +7,7 @@ import subprocess
 import random
 from db.conversations import RepositoryDB, ConversationSummaryDB, init_pinecone_index
 import argparse
+
 
 def generate_random_number():
   return random.randint(1, 100000)
@@ -91,19 +89,27 @@ def main():
   Stopper = Verifier()
   Issuer = IssueCreator(conversation_db)
 
+  print("Note: if you want to end conversation, say goodbye.")
+
+  name = input("Please enter your name: ")
+
   while True:
-    human_input = input("conversation: ")
+    human_input = input(f"{name}: ")
     model_output = Chatter.run(human_input)
-    print(model_output)
+    print(f"AI MODEL OUTPUT: {model_output}\n")
 
     over = Stopper.predict(human_input, model_output)
     if over:
+      print("CONVERSATION HAS ENDED")
       conversation_summary = Chatter.get_summary()
+      print("SAVING SUMMARY TO DB")
       conversation_db.save_summary(conversation_summary)
       break
 
+  print("CREATING GITHUB ISSUES")
   Issuer.run(latest_conversation=conversation_summary)
 
+  print("CODING")
   coder = Coder(repo_db)
   while True:
     res = coder.plan_and_execute(issue)
@@ -113,6 +119,7 @@ def main():
        break
     issue = res
 
+  print("CREATING PULL REQUEST")
   pull_request_number = git_checkout_add_commit_push(f"dev-gpt-{generate_random_number()}")
   print(f"Pull request created with number {pull_request_number}")
 

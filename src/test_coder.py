@@ -1,6 +1,3 @@
-import logging
-import click
-import openai
 import os
 from ghapi.core import *
 from ghapi.all import GhApi
@@ -9,6 +6,7 @@ from agents.agent import Coder
 import subprocess
 import random
 from db.conversations import RepositoryDB, init_pinecone_index
+import argparse
 
 
 def generate_random_number():
@@ -57,6 +55,10 @@ EMBEDDING_MODEL_NAME = 'text-embedding-ada-002'
 
 
 def main():
+  parser = argparse.ArgumentParser(description='Fetch GitHub issue')
+  parser.add_argument('--issue', type=int, help='GitHub issue number')
+  args = parser.parse_args()
+
   embed = OpenAIEmbeddings(
     model=EMBEDDING_MODEL_NAME,
     openai_api_key=os.environ["OPENAI_API_KEY"]
@@ -68,7 +70,7 @@ def main():
   repo_db.load_documents(f"./{repo}")
 
 
-  title, body = get_issue(9)
+  title, body = get_issue(args.issue)
 
   issue = f"""
   Title: {title}

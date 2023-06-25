@@ -14,7 +14,9 @@ from db.conversations import RepositoryDB, init_pinecone_index
  
 
 def git_checkout_add_commit_push(branch_name="testing123"):
+
   os.chdir('movie-picker')
+
   # Git checkout -b test-branch
   checkout_cmd = f'git checkout -b {branch_name}'
   subprocess.call(checkout_cmd, shell=True)

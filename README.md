@@ -11,9 +11,11 @@
 ```bash
 cd src
 pip install -r requirements.txt
-export GITHUB_REPO=your-repo-name
-# or
+
+git clone https://github.com/imjwang/movie-picker
+# or git clone https://git/your/nextjs/proj
 export GITHUB_REPO=movie-picker
+# or export GITHUB_REPO=your-repo-name
 ```
 ### Setting up a project
 I've been testing on a personal project in `src/movie-picker`. It's been pushed as a demo, but you can also clone your own repository to `/src`. The project is made for next.js + tailwindcss apps that use the pages router. It will likely fail if not a next.js project.

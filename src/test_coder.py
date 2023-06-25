@@ -7,15 +7,28 @@ from ghapi.all import GhApi
 from langchain.embeddings.openai import OpenAIEmbeddings
 from agents.agent import Coder
 import subprocess
-
-
-
+import random
 from db.conversations import RepositoryDB, init_pinecone_index
- 
+
+
+def generate_random_number():
+    return random.randint(1, 100000)
+
+
+def get_issue(num):
+  repo = os.environ['GITHUB_REPO']
+  github_token = os.environ['GITHUB_TOKEN']
+  user = os.environ['GITHUB_USER']
+  gh = GhApi(owner=user, repo=repo, token=github_token)
+
+  issue = gh.issues.get(issue_number=num)
+  return issue.title, issue.body
+
 
 def git_checkout_add_commit_push(branch_name="testing123"):
+  repo = os.environ['GITHUB_REPO']
 
-  os.chdir('movie-picker')
+  os.chdir(f"./{repo}")
 
   # Git checkout -b test-branch
   checkout_cmd = f'git checkout -b {branch_name}'
@@ -51,31 +64,28 @@ def main():
 
   index = init_pinecone_index(index_name=INDEX_NAME)
   repo_db = RepositoryDB(index, embed)
-  repo_db.load_documents('./movie-picker')
+  repo = os.environ['GITHUB_REPO']
+  repo_db.load_documents(f"./{repo}")
 
 
-  issue = """
-  Title: Issue #2: Implement User Feedback Form
+  title, body = get_issue(9)
+
+  issue = f"""
+  Title: {title}
   Body:
-  🚀 Feature
-Create a feedback form for users to like or dislike the project. This form should be the main feature of the dashboard.
-
-Motivation & Approach
-To understand user preferences and improve the project based on user feedback, we need to implement a feedback form. This form will allow users to express their likes or dislikes about the project.
-
-The approach will be to design and implement this form as a main feature of the dashboard. It should be user-friendly and easily accessible.
+  {body}
   """
 
-  # coder = Coder(repo_db)
-  # while True:
-  #   res = coder.plan_and_execute(issue)
-  #   print(res)
-  #   flag = coder.reflect(res)
-  #   if flag:
-  #      break
-  #   issue = res
+  coder = Coder(repo_db)
+  while True:
+    res = coder.plan_and_execute(issue)
+    print(res)
+    flag = coder.reflect(res)
+    if flag:
+       break
+    issue = res
 
-  pull_request_number = git_checkout_add_commit_push("testing")
+  pull_request_number = git_checkout_add_commit_push(f"dev-gpt-{generate_random_number()}")
   print(f"Pull request created with number {pull_request_number}")
 
 
